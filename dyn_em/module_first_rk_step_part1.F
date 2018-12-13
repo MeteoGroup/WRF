@@ -305,7 +305,8 @@ BENCH_START(rad_driver_tim)
      &        ,CAM_ABS_DIM1=grid%cam_abs_dim1, CAM_ABS_DIM2=grid%cam_abs_dim2 &
      &        ,CAM_ABS_FREQ_S=grid%cam_abs_freq_s                         &
      &        ,XTIME=grid%xtime                                                &
-              ,CURR_SECS=curr_secs, ADAPT_STEP_FLAG=adapt_step_flag       &
+!BP-20181205: original code              ,CURR_SECS=curr_secs, ADAPT_STEP_FLAG=adapt_step_flag       &
+              ,CURR_SECS=curr_secs,PREV_SECS=grid%prev_secs, ADAPT_STEP_FLAG=adapt_step_flag       &
 !BSINGH - For WRFCuP scheme
      &        ,CU_PHYSICS=config_flags%cu_physics                         & !CuP, wig 5-Oct-2006
      &        ,SHALLOWCU_FORCED_RA=config_flags%shallowcu_forced_ra       & !CuP, wig
@@ -330,7 +331,8 @@ BENCH_START(rad_driver_tim)
 !ZCX+ cloud fraction for CLWRF
      &        , CLDT=grid%cldt, ZNU=grid%znu                              &
 !ZCX-
-     &        , CLDFRA=grid%cldfra, CLDFRA_MP_ALL=grid%cldfra_mp_all      &
+!BP-20181205: original code     &        , CLDFRA=grid%cldfra, CLDFRA_MP_ALL=grid%cldfra_mp_all      &
+	 &        , CLDFRA=grid%cldfra, SWACCU=grid%swaccu, CLDFRA_MP_ALL=grid%cldfra_mp_all      &
      &        , LRADIUS=grid%LRADIUS,IRADIUS=grid%IRADIUS                 & !BSINGH(01/22/2014)
      &        , CLDFRA_DP=grid%cldfra_dp                                  & ! ckay for subgrid cloud
      &        , CLDFRA_SH=grid%cldfra_sh                                  &
@@ -795,6 +797,9 @@ BENCH_START(surf_driver_tim)
      &        ,RAINBL=grid%rainbl,SR=grid%sr,RAINSHV=grid%rainshv         &
      &        ,GRAUPELNCV=grid%graupelncv, HAILNCV=grid%hailncv           &
      &        ,RAINNCV=grid%rainncv,REGIME=grid%regime,T2=grid%t2,THC=grid%thc            &
+!BP-20181205: Add TN,TX and FFX to module call
+     &        ,TN=grid%tn,TX=grid%tx,FFX=grid%ffx                          &
+!BP-20181205: END
      &        ,QSG=grid%qsg,QVG=grid%qvg,QCG=grid%qcg,SOILT1=grid%soilt1,TSNAV=grid%tsnav & ! ruc lsm
      &        ,SMFR3D=grid%smfr3d,KEEPFR3DFLAG=grid%keepfr3dflag,DEW=grid%dew             & ! ruc lsm
      &        ,POTEVP=grid%POTEVP, SNOPCX=grid%SNOPCX, SOILTB=grid%SOILTB                 & ! ruc lsm

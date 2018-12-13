@@ -72,7 +72,7 @@ MODULE module_sf_mynn
 !   REAL    , PARAMETER :: EP_2         = r_d/r_v
 
   REAL, PARAMETER :: xlvcp=xlv/cp, ep_3=1.-ep_2 
-  REAL, PARAMETER :: wmin=0.1    ! Minimum wind speed
+  REAL, PARAMETER :: wmin=1.25    ! Minimum wind speed
   REAL, PARAMETER :: VCONVC=1.25
   REAL, PARAMETER :: SNOWZ0=0.011
   REAL, PARAMETER :: COARE_OPT=3.0  ! 3.0 or 3.5

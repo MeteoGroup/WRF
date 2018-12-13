@@ -46,7 +46,8 @@ CONTAINS
 #endif
      &          ,albbck,embck,lh,sh2o,shdmax,shdmin,z0                &
      &          ,flqc,flhc,psfc,sst,sst_input,sstsk,dtw,sst_update,sst_skin     &
-     &          ,scm_force_skintemp,scm_force_flux,t2,emiss           &
+ !BP-20181205: original code    &          ,scm_force_skintemp,scm_force_flux,t2,emiss           &
+     &          ,scm_force_skintemp,scm_force_flux,t2,tn,tx,ffx,emiss           &
      &          ,sf_sfclay_physics,sf_surface_physics,ra_lw_physics   & 
      &          ,bl_pbl_physics                                       &
      &          ,mosaic_lu,mosaic_soil                                &
@@ -1032,7 +1033,8 @@ CONTAINS
    REAL, DIMENSION( ims:ime, jms:jme ), OPTIONAL, INTENT(IN )::     rainncv
    REAL, DIMENSION( ims:ime, jms:jme ), OPTIONAL, INTENT(IN )::     rainshv
    REAL, DIMENSION( ims:ime, jms:jme ), OPTIONAL, INTENT(INOUT)::   RAINBL
-   REAL, DIMENSION( ims:ime, jms:jme ), OPTIONAL, INTENT(INOUT)::   t2
+!BP-20181205: original code   REAL, DIMENSION( ims:ime, jms:jme ), OPTIONAL, INTENT(INOUT)::   t2
+   REAL, DIMENSION( ims:ime, jms:jme ), OPTIONAL, INTENT(INOUT)::   t2,TX,TN,FFX
    REAL, DIMENSION( ims:ime, jms:jme ), OPTIONAL, INTENT(IN )::     thc
    REAL, DIMENSION( ims:ime, jms:jme ), OPTIONAL, INTENT(INOUT)::   qsg
    REAL, DIMENSION( ims:ime, jms:jme ), OPTIONAL, INTENT(INOUT)::   qvg
@@ -4078,6 +4080,25 @@ CONTAINS
      ENDIF
 
    ENDIF
+   
+!BP-20181205: Add TN,TX and FFX calculation
+   CALL wrf_debug(100,'Compute TN, TX and FFX')
+   if (MOD((curr_secs),3600.).eq.0) then
+      CALL wrf_debug(100,'setting TX, TN and FFX to zero')
+      TX=0
+      TN=9999
+      FFX=0
+   endif
+   where (sqrt(u10*u10+v10*v10).gt.FFX)
+      FFX=sqrt(u10*u10+v10*v10)
+   endwhere
+   where (t2.gt.TX)
+      TX=t2
+   endwhere
+   where (t2.lt.TN)
+      TN=t2
+   endwhere
+!BP-20181205: END
 
    END SUBROUTINE surface_driver
 

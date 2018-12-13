@@ -32,7 +32,8 @@ CONTAINS
               ,T8W     ,T ,TAUCLDC &
               ,TAUCLDI ,TSK ,VEGFRA  &
               ,WARM_RAIN ,XICE ,XLAND   &
-              ,XLAT ,XLONG ,YR          &
+!BP-20181205: original code              ,XLAT ,XLONG ,YR          &
+              ,XLAT ,XLONG ,YR , SWACCU         &
 !Optional solar variables
               ,DECLINX ,SOLCONX ,COSZEN ,HRANG    &
               , CEN_LAT                                      &
@@ -44,7 +45,8 @@ CONTAINS
               ,CAM_ABS_DIM1, CAM_ABS_DIM2 &
               ,CAM_ABS_FREQ_S                         &
               ,XTIME                                           &
-              ,CURR_SECS, ADAPT_STEP_FLAG       &
+!BP-20181205: original code              ,CURR_SECS, ADAPT_STEP_FLAG       &
+              ,CURR_SECS, PREV_SECS, ADAPT_STEP_FLAG       &
               !BSINGH - For WRFCuP scheme (optional args)
               ,cu_physics,shallowcu_forced_ra   & !CuP, wig 1-Oct-2006
               ,cubot,cutop,cldfra_cup           & !CuP, wig 1-Oct-2006
@@ -678,7 +680,11 @@ CONTAINS
 
    REAL, DIMENSION( ims:ime, jms:jme ),                           &
          OPTIONAL,                                                &
-         INTENT(OUT) ::                                   SWDOWNC, SWDDIRC, SWDDNIC
+!BP-20181205: Add SWACCU and PREV_SECS initialization
+         INTENT(OUT) ::                                   SWDOWNC, SWDDIRC, SWDDNIC, &
+                                                          SWACCU, &
+                                                          PREV_SECS
+!BP-20181205: END
 !
    REAL, DIMENSION( ims:ime, kms:kme, jms:jme ),                  &
          OPTIONAL,                                                &
@@ -725,7 +731,8 @@ CONTAINS
    REAL, DIMENSION( ims:ime, levsiz, jms:jme )  ::    ozmixt
    REAL, DIMENSION( ims:ime, alevsiz, jms:jme, 1:no_src_types )  ::    aerodt
 
-   REAL    ::    DECLIN,SOLCON,XXLAT,TLOCTM,XT24, CEN_LAT, cldfra_cup_mod
+!BP-20181210: Add maxi, maxj
+   REAL    ::    DECLIN,SOLCON,XXLAT,TLOCTM,XT24, CEN_LAT, cldfra_cup_mod, maxi, maxj
    INTEGER ::    i,j,k,its,ite,jts,jte,ij
    INTEGER ::    STEPABS
    LOGICAL ::    gfdl_lw,gfdl_sw, compute_cldfra_cup
@@ -2367,6 +2374,67 @@ CONTAINS
            SWDOWN(I,J)=GSW(I,J)/(1.-ALBEDO(I,J))
         ENDDO
         ENDDO
+		
+!BP-20181205: Compute SWACCU
+        WRITE(wrf_err_message,*)'   CURR_SECS, PREV_SECS(',maxi,',',maxj,')=',CURR_SECS,PREV_SECS(maxi,maxj)
+        CALL wrf_debug(100,wrf_err_message)
+        DO j=jts,jte
+        DO i=its,ite
+           if (PREV_SECS(I,J) .gt. CURR_SECS) PREV_SECS(I,J)=PREV_SECS(I,J)-3600.*CEILING(PREV_SECS(I,J)/3600.)
+           
+           if ((j .eq. maxj) .and. (i .eq. maxi)) then
+             WRITE(wrf_err_message,*)'   SWACCU(i,j), SWDOWN(i,j)=',SWACCU(i,j),SWDOWN(i,j)
+             CALL wrf_debug(100,wrf_err_message)
+             WRITE(wrf_err_message,*)'   CURR_SECS, PREV_SECS(i,j)=',CURR_SECS,PREV_SECS(i,j)
+             CALL wrf_debug(100,wrf_err_message)
+             WRITE(wrf_err_message,*)'   CURR_SECS-FLOOR(CURR_SECS/3600.)*3600.=',CURR_SECS-FLOOR(CURR_SECS/3600.)*3600.
+             CALL wrf_debug(100,wrf_err_message)
+             WRITE(wrf_err_message,*)'   (CURR_SECS-FLOOR(CURR_SECS/3600.)*3600.-PREV_SECS(i,j))=',(CURR_SECS-FLOOR(CURR_SECS/3600.)*3600.-PREV_SECS(i,j))
+             CALL wrf_debug(100,wrf_err_message)
+             WRITE(wrf_err_message,*)'   SWDOWN(i,j)*(CURR_SECS-FLOOR(CURR_SECS/3600.)*3600.-PREV_SECS(i,j))/10000.=',SWDOWN(i,j)*(CURR_SECS-FLOOR(CURR_SECS/3600.)*3600.-PREV_SECS(i,j))/10000.
+             CALL wrf_debug(100,wrf_err_message)
+          endif
+          if ((CURR_SECS-FLOOR(CURR_SECS/3600.)*3600.-PREV_SECS(i,j)) .lt. 0 ) then           
+            ! PREV_SECS wasn't compensated! So do it now
+            SWACCU(I,J)=SWACCU(I,J)+SWDOWN(I,J)*(3600+(CURR_SECS-FLOOR(CURR_SECS/3600.)*3600.-PREV_SECS(i,j)))/10000.
+          else
+            SWACCU(I,J)=SWACCU(I,J)+SWDOWN(I,J)*(CURR_SECS-FLOOR(CURR_SECS/3600.)*3600.-PREV_SECS(i,j))/10000.
+          endif
+          if ( SWACCU(I,J) .lt. 0. ) then
+             WRITE(wrf_err_message,*)'ERROR   SWACCU(i,j), SWDOWN(i,j)=',SWACCU(i,j),SWDOWN(i,j)
+             CALL wrf_debug(100,wrf_err_message)
+             WRITE(wrf_err_message,*)'   CURR_SECS, PREV_SECS(i,j)=',CURR_SECS,PREV_SECS(i,j)
+             CALL wrf_debug(100,wrf_err_message)
+             WRITE(wrf_err_message,*)'   CURR_SECS-FLOOR(CURR_SECS/3600.)*3600.=',CURR_SECS-FLOOR(CURR_SECS/3600.)*3600.
+             CALL wrf_debug(100,wrf_err_message)
+             WRITE(wrf_err_message,*)'   (CURR_SECS-FLOOR(CURR_SECS/3600.)*3600.-PREV_SECS(i,j))=',(CURR_SECS-FLOOR(CURR_SECS/3600.)*3600.-PREV_SECS(i,j))
+             CALL wrf_debug(100,wrf_err_message)
+             WRITE(wrf_err_message,*)'   SWDOWN(i,j)*(CURR_SECS-FLOOR(CURR_SECS/3600.)*3600.-PREV_SECS(i,j))/10000.=',SWDOWN(i,j)*(CURR_SECS-FLOOR(CURR_SECS/3600.)*3600.-PREV_SECS(i,j))/10000.
+             CALL wrf_debug(100,wrf_err_message)
+          endif 
+          PREV_SECS(I,J)=CURR_SECS-FLOOR(CURR_SECS/3600.)*3600.
+          if (((CURR_SECS-FLOOR(CURR_SECS/3600.)*3600.)+60.*RADT*0.9) .ge. 3600.) then
+             if ((j .eq. maxj) .and. (i .eq. maxi)) then
+                WRITE(wrf_err_message,*)'   Compensating,3600.-PREV_SECS(i,j)=',(3600.-PREV_SECS(i,j))
+                CALL wrf_debug(100,wrf_err_message)
+                WRITE(wrf_err_message,*)'   Before compensation,SWDOWN(I,J)=',SWDOWN(I,J)
+                CALL wrf_debug(100,wrf_err_message)
+              endif
+              SWACCU(I,J)=SWACCU(I,J)+SWDOWN(I,J)*(3600.-PREV_SECS(i,j))/10000.
+              PREV_SECS(i,j)=0.
+              if ((j .eq. maxj) .and. (i .eq. maxi)) then
+                 WRITE(wrf_err_message,*)'   After compensation SWACCU(I,J)=',SWACCU(I,J)
+                 CALL wrf_debug(100,wrf_err_message)
+              endif
+           endif
+        ENDDO
+        ENDDO
+        WRITE(wrf_err_message,*)'   CURR_SECS, PREV_SECS(maxi,maxj)=',CURR_SECS,PREV_SECS(maxi,maxj)
+        CALL wrf_debug(100,wrf_err_message)
+        WRITE(wrf_err_message,*)'   SWACCU(maxi,maxj), SWDOWN(maxi,maxj)=',SWACCU(maxi,maxj),SWDOWN(maxi,maxj)
+        CALL wrf_debug(100,wrf_err_message)
+!BP-20181205: END
+
      ENDIF
 
 ! jararias, 14/08/2013

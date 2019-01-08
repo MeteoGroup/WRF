@@ -1434,19 +1434,15 @@ state    real  CLDT             ij      misc        1         -      -        "C
 #state    real  CLDL             ij      misc        1         -      -        "CFRACL"                "LOW CLOUD FRACTION (ETA GREATER THAN 0.69)"           ""
 #state    real  LWP              ij      misc        1         -      -        "LWP"                   "LIQUID CLOUD WATER PATH"                              "kg m-2"
 state    real  SWDOWN           ij      misc        1         -      rhd      "SWDOWN"                "DOWNWARD SHORT WAVE FLUX AT GROUND SURFACE"           "W m-2"      
-state    real  SWDOWNC          ij      misc        1         -      -        "SWDOWNC"               "DOWNWARD CLEAR-SKY SHORT WAVE FLUX AT GROUND SURFACE"           "W m-2"
-#BP-20181205: Add SWACCU, TX, TN and FFX to registry
-state    real  SWACCU           ij      misc        1         -      rhd      "SWACCU"                "ACCUMULATED SHORT WAVE FLUX AT SURFACE"           "J cm-2"
+state    real  SWDOWNC          ij      misc        1         -      -        "SWDOWNC"               "DOWNWARD CLEAR-SKY SHORT WAVE FLUX AT GROUND SURFACE"           "W m-2"  
+#BP-20190102: Add TX, TN and FFX to registry
 state    real  TX               ij      misc        1         -      rhd      "TX"                    "TX at 2 M"       "K"
 state    real  TN               ij      misc        1         -      rhd      "TN"                    "TN at 2 M"       "K"
-state    real  FFX              ij      misc        1         -      rhd      "FFX"     			  "MAX FF AT 10 M LAST HOUR"		"m s-1"
-#BP-20181205: END      
+state    real  FFX              ij      misc        1         -      rhd      "FFX"     			  "HIGHEST WIND SPEED PAST HOUR"	"m s-1"
+#BP-20190102: END    
 state    real  GSW              ij      misc        1         -      rd       "GSW"                   "NET SHORT WAVE FLUX AT GROUND SURFACE"           "W m-2"      
 state    real  GLW              ij      misc        1         -      rhd      "GLW"                   "DOWNWARD LONG WAVE FLUX AT GROUND SURFACE"            "W m-2"      
 state    real  SWNORM           ij      misc        1         -      rhd      "SWNORM"                "NORMAL SHORT WAVE FLUX AT GROUND SURFACE (SLOPE-DEPENDENT)"           "W m-2"
-#BP-20181205: Add PREV_SECS to registry
-state    real  PREV_SECS        ij      misc        1         -      rd        "PREV_SECS"            "PREV_SECS"       "s"
-#BP-20181205: END
 state    real  diffuse_frac     ij      misc        1         -      rd       "DIFFUSE_FRAC"          "DIFFUSE FRACTION OF SURFACE SHORTWAVE IRRADIANCE"       ""
 # WRF-Solar
 state   real    swddir       ij     misc         1         -     rd     "SWDDIR"     "Shortwave surface downward direct irradiance" "W m-2" ""
